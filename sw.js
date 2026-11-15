@@ -1,6 +1,6 @@
 // Focus Quest service worker: caches the app so it opens offline.
 // Bump VERSION whenever index.html changes so phones pick up the update.
-const VERSION = 'fq-v1';
+const VERSION = 'fq-v2';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {
