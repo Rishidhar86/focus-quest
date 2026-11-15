@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f8f3e9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Focus">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<title>Focus Quest</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f8f3e9; --card:#fffcf6; --ink:#2b231d; --muted:#6f6357; --faint:#a3968a;
+  --line:#e7dccb; --soft:#f1e8da; --accent:#7d5230; --accent-2:#a46b3b;
+  --good:#4f7a3a; --warn:#b5562f; --gold:#b8862b; --blue:#3f6f8f;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(60px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
+button,label.btn,.chip,select{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+h2{font-size:15px;margin:0 0 10px;letter-spacing:.02em}
+.muted{color:var(--muted)} .faint{color:var(--faint)} .small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.stack>*+*{margin-top:14px}
+
+/* header */
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:14px}
+.brand{font-weight:750;font-size:19px;letter-spacing:-.01em;margin-right:auto;display:flex;align-items:center;gap:8px}
+.brand .dot{width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.sync{font-size:12px;color:var(--faint)}
+.hud{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
+.hud .pill{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:10px}
+.lvl{width:38px;height:38px;border-radius:10px;background:var(--accent);color:#fffcf6;display:grid;place-items:center;font-weight:800;font-size:15px}
+.xpbar{width:170px;height:8px;background:var(--soft);border-radius:6px;overflow:hidden;margin-top:4px}
+.xpbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent-2),var(--gold));border-radius:6px;transition:width .5s}
+.big{font-weight:750;font-size:17px;line-height:1.1}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+nav button{background:none;border:0;padding:10px 14px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+nav button.on{color:var(--ink);border-color:var(--accent);font-weight:650}
+
+/* buttons/inputs */
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 14px;cursor:pointer}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fffcf6;font-weight:650}
+.btn.primary:hover{background:#6a4527}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--warn)}
+.btn.sm{padding:4px 10px;font-size:13px;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:default}
+input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{background:#fffdf9;border:1px solid var(--line);border-radius:9px;padding:8px 10px;outline:none;min-width:0}
+input:focus,select:focus,textarea:focus{border-color:var(--accent-2)}
+textarea{width:100%;resize:vertical;min-height:70px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fffcf6}
+
+/* focus layout */
+.grid2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px}
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.timer-card{display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 16px}
+.modes{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:12px;flex-wrap:wrap;justify-content:center}
+.modes button{border:0;background:transparent;padding:6px 12px;border-radius:9px;cursor:pointer;color:var(--muted);font-size:14px}
+.modes button.on{background:var(--card);color:var(--ink);font-weight:650;box-shadow:0 1px 2px rgba(60,40,20,.12)}
+.modes button:disabled{cursor:default}
+.ring{position:relative;width:min(290px,78vw);aspect-ratio:1}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.digits{font-family:var(--mono);font-size:clamp(44px,13vw,64px);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.task-row{display:flex;gap:8px;width:100%;max-width:460px}
+.task-row input{flex:1}
+.controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.controls .btn{min-width:96px}
+.cycle{display:flex;gap:6px;align-items:center}
+.cycle i{width:10px;height:10px;border-radius:50%;background:var(--soft);border:1px solid var(--line)}
+.cycle i.on{background:var(--accent);border-color:var(--accent)}
+.setup .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.setup .nums input{width:100%}
+.quest{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px dashed var(--line)}
+.quest:first-of-type{border-top:0}
+.quest .box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--faint);display:grid;place-items:center;flex:none;font-size:13px}
+.quest.done .box{background:var(--good);border-color:var(--good);color:#fffcf6}
+.quest.done .txt{color:var(--muted);text-decoration:line-through}
+.quest .xp{margin-left:auto;font-size:12px;color:var(--gold);font-weight:700;white-space:nowrap}
+
+/* timeline */
+.tl{position:relative;height:46px;background:var(--soft);border-radius:8px;overflow:hidden}
+.tl .seg{position:absolute;top:6px;bottom:6px;border-radius:4px;min-width:3px;cursor:pointer}
+.tl .seg.manual{opacity:.55;background-image:repeating-linear-gradient(45deg,transparent 0 4px,rgba(255,255,255,.35) 4px 8px)}
+.tl .seg.brk{top:19px;bottom:19px;background:var(--faint);opacity:.6}
+.tl .now{position:absolute;top:0;bottom:0;width:2px;background:var(--warn)}
+.tl-ticks{position:relative;height:18px;font-size:11px;color:var(--faint);font-family:var(--mono)}
+.tl-ticks span{position:absolute;transform:translateX(-50%)}
+.entries{list-style:none;margin:0;padding:0}
+.entries li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.entries li:first-child{border-top:0}
+.entries .sw{width:10px;height:10px;border-radius:3px;margin-top:6px;flex:none}
+.entries .main{flex:1;min-width:0}
+.entries .t{font-weight:600;overflow-wrap:anywhere}
+.entries .note{font-size:13px;color:var(--muted);white-space:pre-wrap;margin-top:2px}
+.entries .meta{font-size:12px;color:var(--faint);font-family:var(--mono)}
+.entries .right{text-align:right;flex:none}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--soft);color:var(--muted);margin-left:6px;vertical-align:1px}
+
+/* stats */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile .v{font-size:26px;font-weight:750;letter-spacing:-.02em}
+.tile .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.bars{display:flex;align-items:flex-end;gap:6px;height:170px;position:relative;padding-top:6px}
+.bars .col{flex:1;display:flex;flex-direction:column-reverse;height:100%;min-width:0;position:relative}
+.bars .col .s{width:100%}
+.bars .col .s:first-child{border-radius:0 0 3px 3px}
+.bars .goal{position:absolute;left:0;right:0;border-top:1.5px dashed var(--warn);opacity:.6;pointer-events:none}
+.bars-x{display:flex;gap:6px;font-size:11px;color:var(--faint);margin-top:4px;font-family:var(--mono)}
+.bars-x span{flex:1;text-align:center;min-width:0;overflow:hidden}
+.skill{display:grid;grid-template-columns:150px 1fr 90px;gap:12px;align-items:center;padding:8px 0}
+@media (max-width:600px){.skill{grid-template-columns:1fr 80px}.skill .pb{grid-column:1/-1;order:3}}
+.pb{height:8px;background:var(--soft);border-radius:6px;overflow:hidden}
+.pb>i{display:block;height:100%;border-radius:6px}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,13px);grid-auto-columns:13px;justify-content:start;gap:3px;overflow-x:auto;padding-bottom:4px}
+.heat i{width:13px;height:13px;border-radius:3px;background:var(--soft)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--c);margin-right:5px}
+
+/* achievements */
+.ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.badge{display:flex;gap:12px;align-items:center}
+.badge .ic{font-size:28px;width:46px;height:46px;border-radius:12px;background:var(--soft);display:grid;place-items:center;flex:none}
+.badge.locked .ic{filter:grayscale(1);opacity:.4}
+.badge.locked .nm{color:var(--muted)}
+.badge .nm{font-weight:650}
+.badge.got{border-color:#dcc49d;background:linear-gradient(180deg,#fffaf0,var(--card))}
+
+/* settings */
+.set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.cat-row{display:flex;gap:8px;align-items:center;padding:6px 0}
+.cat-row input[type=color]{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;padding:2px;background:var(--card)}
+.cat-row input[type=text]{flex:1}
+.check{display:flex;gap:8px;align-items:center;font-size:14px}
+
+/* modal + toasts */
+#modal{position:fixed;inset:0;background:rgba(43,35,29,.35);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+#modal.open{display:flex}
+#modal .card{width:100%;max-width:460px;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(43,35,29,.25)}
+#toasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:30;max-width:calc(100vw - 32px)}
+.toast{background:var(--ink);color:#fbf5ea;padding:10px 14px;border-radius:10px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.18);animation:pop .25s ease-out}
+.toast.gold{background:linear-gradient(135deg,#8a5a26,#b8862b);font-weight:650}
+@keyframes pop{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.xp-burst{font-size:34px;font-weight:800;color:var(--gold);text-align:center;margin:4px 0 2px}
+kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--card)}
+.empty{color:var(--faint);font-size:14px;padding:12px 0}
+.snd-row{display:grid;grid-template-columns:150px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:6px 0}
+.snd-row select{width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+@media (hover:none){.kbd-hint{display:none}}
+@media (max-width:600px){
+  input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{font-size:16px} /* stops iOS zoom-on-focus */
+  header{gap:10px;margin-bottom:8px}
+  .brand{width:100%}
+  .hud{display:grid;grid-template-columns:1.5fr 1fr 1fr;width:100%;gap:6px}
+  .hud .pill{padding:8px;gap:7px;min-width:0}
+  .hud .pill>div{min-width:0}
+  .lvl{width:30px;height:30px;font-size:13px;border-radius:8px;flex:none}
+  .hud .big{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hud .small{font-size:11px}
+  .hud svg{width:28px;height:28px;flex:none}
+  .xpbar{width:100%}
+  nav{position:sticky;top:0;background:var(--bg);z-index:5;margin:0 -16px 12px;padding:0 12px}
+  nav button{padding:10px 10px}
+  .card{padding:14px}
+  .timer-card{padding:16px 12px}
+  .modes{flex-wrap:nowrap}
+  .modes button{padding:6px 9px;font-size:13px;white-space:nowrap}
+  .controls .btn{min-width:0;flex:1;padding:12px 10px}
+  .controls{width:100%;max-width:460px}
+  .snd-row{grid-template-columns:1fr 1fr}
+  .snd-row .snd-lbl{grid-column:1/-1}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .tile .v{font-size:22px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="dot"></span>Focus Quest</div>
+    <div class="hud" id="hud"></div>
+  </header>
+  <nav id="nav"></nav>
+  <main id="view"></main>
+</div>
+<div id="modal"><div class="card" id="modalCard"></div></div>
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* ============================== constants ============================== */
+const MIN = 60000;
+const PALETTE = ['#b5562f','#3f6f8f','#5f7f3a','#8a5a9e','#c08a1e','#2f7f78','#a8445c','#7d5230'];
+const HEAT = ['#efe6d8','#e6d0ae','#d1a874','#ad7744','#7d5230'];
+const TITLES = [[1,'Wanderer'],[3,'Apprentice'],[6,'Initiate'],[10,'Adept'],[15,'Scholar'],[20,'Expert'],[30,'Master'],[40,'Grandmaster'],[50,'Sage'],[75,'Legend']];
+const TABS = [['focus','Focus'],['today','Day log'],['stats','Stats'],['ach','Achievements'],['settings','Settings']];
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const dayKey = t => { const d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const keyDate = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (k, n) => { const d = keyDate(k); d.setDate(d.getDate() + n); return dayKey(d); };
+const today = () => dayKey(Date.now());
+const hm = t => { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const fmtMin = m => { m = Math.round(m); if (m < 60) return m + 'm'; const h = Math.floor(m / 60), r = m % 60; return h + 'h' + (r ? ' ' + pad(r) + 'm' : ''); };
+const fmtClock = ms => { const s = Math.max(0, Math.round(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + pad(m) : pad(m)) + ':' + pad(x); };
+const hash = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+const fmtDay = k => keyDate(k).toLocaleDateString(undefined, {weekday:'long', day:'numeric', month:'short'});
+
+function defaults() {
+  return {
+    version: 1,
+    settings: { dailyGoal: 180, longEvery: 4, autoBreak: true, autoFocus: false, sound: true, notify: true, manualRate: 0.5,
+                chimeFocus: 'bells', chimeBreak: 'soft', volume: 0.8, customNames: {}, keepAwake: true },
+    categories: [
+      { id: 'plc', name: 'Placements', color: PALETTE[0] },
+      { id: 'vlsi', name: 'VLSI', color: PALETTE[1] },
+      { id: 'col', name: 'College', color: PALETTE[2] },
+      { id: 'per', name: 'Personal', color: PALETTE[3] },
+    ],
+    presets: [
+      { id: 'classic', name: 'Classic', focus: 25, short: 5, long: 15 },
+      { id: 'deep', name: 'Deep work', focus: 50, short: 10, long: 20 },
+      { id: 'sprint', name: 'Sprint', focus: 15, short: 3, long: 10 },
+      { id: 'monk', name: 'Monk mode', focus: 90, short: 15, long: 30 },
+    ],
+    current: { mode: 'focus', focus: 25, short: 5, long: 15, presetId: 'classic', title: '', cat: 'plc' },
+    timer: null,
+    cycle: 0,
+    entries: [],
+  };
+}
+function migrate(s) {
+  const d = defaults();
+  s.settings = Object.assign(d.settings, s.settings || {});
+  s.current = Object.assign(d.current, s.current || {});
+  for (const k of ['categories', 'presets', 'entries']) if (!Array.isArray(s[k])) s[k] = d[k];
+  if (typeof s.cycle !== 'number') s.cycle = 0;
+  if (s.timer === undefined) s.timer = null;
+  return s;
+}
+
+/* ============================== state + persistence ============================== */
+let S = defaults();
+let saveT = null;
+let tab = (() => { try { return localStorage.getItem('fq-tab') || 'focus'; } catch (_) { return 'focus'; } })();
+let viewDay = today();
+
+/* Saved in Firefox's own storage for this file — no server, nothing running in the background. */
+function load() {
+  try { const j = JSON.parse(localStorage.getItem('fq-state') || 'null'); S = j ? migrate(j) : defaults(); } catch (_) { S = defaults(); }
+}
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => { try { localStorage.setItem('fq-state', JSON.stringify(S)); } catch (_) { toast('Could not save — is Firefox in private mode?'); } }, 150);
+}
+addEventListener('pagehide', () => { try { localStorage.setItem('fq-state', JSON.stringify(S)); } catch (_) {} });
+
+/* ============================== game rules ============================== */
+const catOf = id => S.categories.find(c => c.id === id) || { id, name: 'Uncategorised', color: '#a3968a' };
+const isFocus = e => e.type === 'focus' || (e.type === 'manual' && e.focus);
+function xpOf(e) {
+  if (e.type === 'break') return 0;
+  if (e.type === 'manual') return Math.round(e.minutes * (e.focus ? 1 : S.settings.manualRate));
+  return Math.round(e.minutes * (e.mult || 1)) + (e.completed ? 10 : 0);
+}
+const needFor = L => 80 + 40 * L;
+function levelInfo(xp) {
+  let L = 1, rem = xp;
+  while (rem >= needFor(L)) { rem -= needFor(L); L++; }
+  let title = TITLES[0][1];
+  for (const [lv, t] of TITLES) if (L >= lv) title = t;
+  return { L, into: rem, need: needFor(L), title };
+}
+// per-category skill: level n at 30·n² minutes  (1 → 30m, 2 → 2h, 5 → 12.5h, 10 → 50h)
+const skillLevel = m => Math.floor(Math.sqrt(m / 30));
+const skillAt = n => 30 * n * n;
+
+const QUEST_POOL = [
+  { id: 's3', label: 'Complete 3 full focus sessions', xp: 25, ok: d => d.sessions >= 3, prog: d => [d.sessions, 3] },
+  { id: 's5', label: 'Complete 5 full focus sessions', xp: 40, ok: d => d.sessions >= 5, prog: d => [d.sessions, 5] },
+  { id: 'deep', label: 'One focus block of 45+ minutes', xp: 25, ok: d => d.maxSession >= 45 },
+  { id: 'two', label: 'Focus on 2 different categories', xp: 20, ok: d => d.cats.size >= 2, prog: d => [d.cats.size, 2] },
+  { id: 'early', label: 'Start focusing before 10:00', xp: 20, ok: d => d.earliestHour < 10 },
+  { id: 'notes', label: 'Write notes on 3 sessions', xp: 20, ok: d => d.notes >= 3, prog: d => [d.notes, 3] },
+  { id: 'breaks', label: 'Take 2 proper breaks', xp: 15, ok: d => d.breaks >= 2, prog: d => [d.breaks, 2] },
+  { id: 'over', label: 'Beat your daily goal by 30 min', xp: 30, ok: (d, g) => d.focusMin >= g + 30 },
+];
+function questsFor(k) {
+  const g = S.settings.dailyGoal, n = QUEST_POOL.length, h = hash('fq' + k);
+  const i = h % n, j = (i + 1 + (Math.floor(h / 97) % (n - 1))) % n;
+  return [{ id: 'goal', label: `Hit your daily goal (${fmtMin(g)})`, xp: 40, ok: d => d.focusMin >= g, prog: d => [Math.round(d.focusMin), g] },
+          QUEST_POOL[i], QUEST_POOL[j]];
+}
+
+const ACH = [
+  { id: 'first', ic: '🌱', nm: 'First Step', d: 'Complete your first focus session', xp: 50, p: g => [g.sessions, 1] },
+  { id: 's10', ic: '🔥', nm: 'Warmed Up', d: 'Complete 10 focus sessions', xp: 50, p: g => [g.sessions, 10] },
+  { id: 's50', ic: '⚙️', nm: 'Habit Engine', d: 'Complete 50 focus sessions', xp: 100, p: g => [g.sessions, 50] },
+  { id: 's200', ic: '🏭', nm: 'Machine', d: 'Complete 200 focus sessions', xp: 250, p: g => [g.sessions, 200] },
+  { id: 'h10', ic: '⏳', nm: 'Ten Hours', d: '10 hours of total focus', xp: 50, p: g => [g.totalMin / 60, 10] },
+  { id: 'h50', ic: '📚', nm: 'Fifty Hours', d: '50 hours of total focus', xp: 100, p: g => [g.totalMin / 60, 50] },
+  { id: 'h100', ic: '🏛️', nm: 'Centurion', d: '100 hours of total focus', xp: 200, p: g => [g.totalMin / 60, 100] },
+  { id: 'h500', ic: '🗻', nm: 'Summit', d: '500 hours of total focus', xp: 500, p: g => [g.totalMin / 60, 500] },
+  { id: 'st3', ic: '🕯️', nm: 'Kindling', d: 'Hit your goal 3 days in a row', xp: 50, p: g => [g.bestStreak, 3] },
+  { id: 'st7', ic: '🔥', nm: 'On Fire', d: 'Hit your goal 7 days in a row', xp: 100, p: g => [g.bestStreak, 7] },
+  { id: 'st30', ic: '☀️', nm: 'Unstoppable', d: 'Hit your goal 30 days in a row', xp: 300, p: g => [g.bestStreak, 30] },
+  { id: 'deep', ic: '🌊', nm: 'Deep Diver', d: 'A single 90+ minute focus block', xp: 75, p: g => [g.maxSession, 90] },
+  { id: 'mara', ic: '🏃', nm: 'Marathon', d: '6 hours of focus in one day', xp: 100, p: g => [g.maxDay / 60, 6] },
+  { id: 'dbl', ic: '⚡', nm: 'Overachiever', d: 'Double your daily goal in one day', xp: 75, p: g => [g.maxDay, 2 * S.settings.dailyGoal] },
+  { id: 'early', ic: '🐦', nm: 'Early Bird', d: 'Start a focus session before 7:00', xp: 50, p: g => [g.early ? 1 : 0, 1] },
+  { id: 'owl', ic: '🦉', nm: 'Night Owl', d: 'Be focusing at 23:00 or later', xp: 50, p: g => [g.owl ? 1 : 0, 1] },
+  { id: 'poly', ic: '🧭', nm: 'Polymath', d: '1+ hour in 4 different categories', xp: 75, p: g => [g.catsHour, 4] },
+  { id: 'scribe', ic: '✍️', nm: 'Chronicler', d: 'Write notes on 25 sessions', xp: 75, p: g => [g.notes, 25] },
+  { id: 'quest', ic: '🏆', nm: 'Quest Master', d: 'Clear all daily quests in one day', xp: 75, p: g => [g.allQuestDays, 1] },
+  { id: 'diary', ic: '📓', nm: 'Day Logger', d: 'Log 10 activities by hand', xp: 50, p: g => [g.manual, 10] },
+];
+
+function emptyDay() { return { focusMin: 0, sessions: 0, cats: new Set(), notes: 0, breaks: 0, earliestHour: 99, maxSession: 0, xp: 0, entries: [] }; }
+/* Everything game-related is derived from the entry log, so editing/deleting entries keeps XP honest. */
+function compute() {
+  const days = new Map();
+  const catMin = {};
+  const g = { sessions: 0, totalMin: 0, maxSession: 0, maxDay: 0, early: false, owl: false, notes: 0, manual: 0, catsHour: 0, allQuestDays: 0, bestStreak: 0, streak: 0, xp: 0, quests: 0 };
+  for (const e of S.entries) {
+    const k = dayKey(e.start);
+    if (!days.has(k)) days.set(k, emptyDay());
+    const d = days.get(k);
+    d.entries.push(e);
+    d.xp += xpOf(e);
+    g.xp += xpOf(e);
+    if (e.type === 'break') { if (e.completed) d.breaks++; continue; }
+    if (e.type === 'manual') g.manual++;
+    if (e.note && e.note.trim()) { d.notes++; g.notes++; }
+    catMin[e.cat] = (catMin[e.cat] || 0) + e.minutes;
+    if (!isFocus(e)) continue;
+    d.focusMin += e.minutes; g.totalMin += e.minutes;
+    d.cats.add(e.cat);
+    d.maxSession = Math.max(d.maxSession, e.minutes); g.maxSession = Math.max(g.maxSession, e.minutes);
+    const sh = new Date(e.start).getHours(), eh = new Date(e.end).getHours();
+    d.earliestHour = Math.min(d.earliestHour, sh);
+    if (sh < 7 && sh >= 4) g.early = true;
+    if (eh >= 23 || eh < 4 || sh >= 23 || sh < 4) g.owl = true;
+    if (e.type === 'focus' && e.completed) { d.sessions++; g.sessions++; }
+  }
+  const goal = S.settings.dailyGoal;
+  for (const [k, d] of days) {
+    g.maxDay = Math.max(g.maxDay, d.focusMin);
+    const qs = questsFor(k);
+    let done = 0;
+    for (const q of qs) if (q.ok(d, goal)) { done++; d.xp += q.xp; g.xp += q.xp; g.quests++; }
+    if (done === qs.length) g.allQuestDays++;
+  }
+  g.catsHour = Object.values(catMin).filter(m => m >= 60).length;
+  // streaks
+  const met = k => (days.get(k)?.focusMin || 0) >= goal;
+  const keys = [...days.keys()].sort();
+  if (keys.length) {
+    let run = 0;
+    for (let k = keys[0]; k <= today(); k = addDays(k, 1)) { run = met(k) ? run + 1 : 0; g.bestStreak = Math.max(g.bestStreak, run); }
+  }
+  let k = met(today()) ? today() : addDays(today(), -1);
+  while (met(k)) { g.streak++; k = addDays(k, -1); }
+  // achievements
+  const unlocked = new Set();
+  for (const a of ACH) { const [c, t] = a.p(g); if (c >= t) { unlocked.add(a.id); g.xp += a.xp; } }
+  return { days, catMin, g, unlocked, lvl: levelInfo(g.xp), day: k2 => days.get(k2) || emptyDay() };
+}
+let C = null; // cached compute()
+const recompute = () => (C = compute());
+const streakMult = () => 1 + Math.min(C.g.streak, 10) * 0.05;
+
+/* celebrate anything new since `before` */
+function snapshot() { return { L: C.lvl.L, ach: new Set(C.unlocked), q: questsFor(today()).filter(q => q.ok(C.day(today()), S.settings.dailyGoal)).map(q => q.id) }; }
+function celebrate(before) {
+  recompute();
+  const qNow = questsFor(today()).filter(q => q.ok(C.day(today()), S.settings.dailyGoal));
+  for (const q of qNow) if (!before.q.includes(q.id)) toast(`Quest complete: ${q.label}  +${q.xp} XP`, 'gold');
+  for (const a of ACH) if (C.unlocked.has(a.id) && !before.ach.has(a.id)) toast(`${a.ic} Achievement unlocked: ${a.nm}  +${a.xp} XP`, 'gold');
+  if (C.lvl.L > before.L) { toast(`⬆ LEVEL UP — Lv ${C.lvl.L} · ${C.lvl.title}`, 'gold'); chime('level'); }
+}
+
+/* ============================== sound + notifications ============================== */
+let AC = null;
+function audio() { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (_) {} return AC; }
+const SOUNDS = {
+  bells:   { name: 'Bells',   type: 'sine',     notes: [523, 784, 1047], gap: .16, len: .6 },
+  soft:    { name: 'Soft',    type: 'sine',     notes: [784, 659, 523], gap: .2, len: .8 },
+  marimba: { name: 'Marimba', type: 'triangle', notes: [659, 784, 988, 1319], gap: .11, len: .35, gain: .3 },
+  digital: { name: 'Digital', type: 'square',   notes: [988, 0, 988, 0, 988], gap: .12, len: .1, gain: .06 },
+  gong:    { name: 'Gong',    type: 'sine',     notes: [196, 294], gap: .02, len: 3.2, gain: .3 },
+  level:   { type: 'sine', notes: [523, 659, 784, 1047], gap: .16, len: .6 },
+};
+const customBuf = {};
+let playing = [];
+function stopSound() { for (const n of playing) { try { n.stop(); } catch (_) {} } playing = []; }
+function playTone(snd) {
+  const ac = audio(); if (!ac) return;
+  snd.notes.forEach((f, i) => {
+    if (!f) return;
+    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + i * snd.gap;
+    o.type = snd.type; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime((snd.gain || .2) * S.settings.volume, t + .015);
+    g.gain.exponentialRampToValueAtTime(.0001, t + snd.len);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + snd.len + .05); playing.push(o);
+  });
+}
+function playSlot(slot) { // slot: 'focus' (focus ended) | 'break' (break ended)
+  const key = S.settings[slot === 'focus' ? 'chimeFocus' : 'chimeBreak'];
+  if (key === 'custom' && customBuf[slot]) {
+    const ac = audio(); if (!ac) return;
+    const src = ac.createBufferSource(), g = ac.createGain();
+    src.buffer = customBuf[slot]; g.gain.value = S.settings.volume;
+    src.connect(g).connect(ac.destination); src.start(); playing.push(src);
+    return;
+  }
+  playTone(SOUNDS[key] || SOUNDS.bells);
+}
+function chime(kind) {
+  if (!S.settings.sound) return;
+  if (kind === 'level') return playTone(SOUNDS.level);
+  playSlot(kind === 'break' ? 'break' : 'focus');
+}
+/* custom sounds live in IndexedDB (falls back to localStorage for small files) */
+let dbP = null;
+const idb = () => dbP || (dbP = new Promise((res, rej) => {
+  const r = indexedDB.open('focus-quest', 1);
+  r.onupgradeneeded = () => r.result.createObjectStore('sounds');
+  r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+}));
+const blobToDataURL = b => new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); });
+async function soundPut(slot, blob) {
+  try {
+    const db = await idb();
+    await new Promise((res, rej) => { const tx = db.transaction('sounds', 'readwrite'); tx.objectStore('sounds').put(blob, slot); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+  } catch (_) {
+    if (blob.size > 2.5e6) throw new Error('file too big for this browser (max 2.5 MB here)');
+    localStorage.setItem('fq-sound-' + slot, await blobToDataURL(blob));
+  }
+}
+async function soundGet(slot) {
+  try {
+    const db = await idb();
+    const v = await new Promise((res, rej) => { const r = db.transaction('sounds').objectStore('sounds').get(slot); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    if (v) return v;
+  } catch (_) {}
+  const u = localStorage.getItem('fq-sound-' + slot);
+  return u ? (await fetch(u)).blob() : null;
+}
+const decode = (ac, buf) => new Promise((res, rej) => ac.decodeAudioData(buf, res, rej));
+async function loadCustom(slot) {
+  try { const b = await soundGet(slot); const ac = audio(); if (b && ac) customBuf[slot] = await decode(ac, await b.arrayBuffer()); } catch (_) {}
+}
+async function uploadSound(slot, file) {
+  if (file.size > 10e6) throw new Error('keep it under 10 MB');
+  const ac = audio(); if (!ac) throw new Error('audio not supported');
+  const buf = await decode(ac, await file.arrayBuffer()).catch(() => { throw new Error("couldn't read that audio file"); });
+  await soundPut(slot, file);
+  customBuf[slot] = buf;
+  S.settings.customNames = Object.assign({}, S.settings.customNames, { [slot]: file.name.slice(0, 40) });
+  S.settings[slot === 'focus' ? 'chimeFocus' : 'chimeBreak'] = 'custom';
+  save(); render(); stopSound(); playSlot(slot);
+  toast('Sound set: ' + file.name);
+}
+
+/* keep the screen on while a timer runs (phones stop JS timers when the screen locks) */
+let wakeLock = null;
+async function syncWake() {
+  const want = !!(S.settings.keepAwake && S.timer && S.timer.running && document.visibilityState === 'visible');
+  try {
+    if (want && !wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    else if (!want && wakeLock) { const w = wakeLock; wakeLock = null; await w.release(); }
+  } catch (_) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') tick();
+  else { try { localStorage.setItem('fq-state', JSON.stringify(S)); } catch (_) {} }
+  syncWake();
+});
+function notify(title, body) {
+  if (!S.settings.notify || !('Notification' in window) || Notification.permission !== 'granted') return;
+  try { new Notification(title, { body, silent: true }); } catch (_) {}
+}
+function toast(msg, cls = '') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + cls; el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), cls === 'gold' ? 6000 : 3500);
+}
+
+/* ============================== timer ============================== */
+const MODE_LABEL = { focus: 'Focus', short: 'Short break', long: 'Long break', flow: 'Flow' };
+const MODE_COLOR = { focus: 'var(--accent)', short: 'var(--good)', long: 'var(--good)', flow: 'var(--blue)' };
+const elapsed = t => t.elapsed + (t.running ? Date.now() - t.runStart : 0);
+const modeMinutes = m => m === 'flow' ? null : +S.current[m];
+const nextBreak = () => (S.cycle > 0 && S.cycle % S.settings.longEvery === 0) ? 'long' : 'short';
+
+function startTimer(mode) {
+  audio();
+  const mins = modeMinutes(mode);
+  S.current.mode = mode;
+  S.timer = { mode, running: true, runStart: Date.now(), elapsed: 0, firstStart: Date.now(), duration: mins ? mins * MIN : null,
+              planned: mins, title: S.current.title.trim(), cat: S.current.cat };
+  save(); render();
+}
+function pauseTimer() { const t = S.timer; t.elapsed = elapsed(t); t.running = false; save(); render(); }
+function resumeTimer() { const t = S.timer; t.runStart = Date.now(); t.running = true; audio(); save(); render(); }
+function discardTimer() {
+  if (S.timer && elapsed(S.timer) > MIN && !confirm('Discard this session without logging it?')) return;
+  S.timer = null; save(); render();
+}
+function finishTimer(natural) {
+  const t = S.timer; if (!t) return;
+  const el = natural ? t.duration : elapsed(t);
+  const end = natural && t.running ? t.runStart + (t.duration - t.elapsed) : Date.now();
+  const minutes = Math.round(el / MIN);
+  S.timer = null;
+  if (t.mode === 'focus' || t.mode === 'flow') {
+    if (minutes < 1) { toast('Under a minute — not logged'); save(); render(); return; }
+    const before = snapshot();
+    const completed = t.mode === 'focus' ? !!natural : minutes >= 25;
+    const e = { id: uid(), type: 'focus', mode: t.mode, title: t.title || 'Untitled focus', cat: t.cat, start: t.firstStart, end, minutes,
+                planned: t.planned, completed, note: '', mult: +streakMult().toFixed(2) };
+    S.entries.push(e);
+    if (completed && t.mode === 'focus') S.cycle++;
+    const brk = nextBreak();
+    chime('done');
+    notify('Focus session complete', `${e.title} · ${fmtMin(minutes)} · +${xpOf(e)} XP`);
+    if (t.mode === 'focus' && S.settings.autoBreak && natural) startTimer(brk); else { S.current.mode = t.mode === 'flow' ? 'flow' : 'focus'; save(); }
+    celebrate(before);
+    render();
+    completeModal(e, brk, natural && t.mode === 'focus' && !S.settings.autoBreak);
+  } else {
+    const before = snapshot();
+    if (minutes >= 1) S.entries.push({ id: uid(), type: 'break', title: MODE_LABEL[t.mode], cat: null, start: t.firstStart, end, minutes, completed: !!natural });
+    chime('break');
+    notify('Break over', 'Time to get back to it.');
+    if (natural && S.settings.autoFocus) startTimer('focus'); else { S.current.mode = 'focus'; save(); }
+    celebrate(before);
+    render();
+  }
+}
+function tick() {
+  const t = S.timer;
+  if (t && t.running && t.duration && elapsed(t) >= t.duration) return finishTimer(true);
+  paintTimer();
+}
+
+/* ============================== rendering ============================== */
+const $ = id => document.getElementById(id);
+function render() {
+  recompute();
+  renderHud();
+  $('nav').innerHTML = TABS.map(([id, nm]) => `<button data-act="tab" data-id="${id}" class="${tab === id ? 'on' : ''}">${nm}</button>`).join('');
+  const v = $('view');
+  v.innerHTML = tab === 'focus' ? viewFocus() : tab === 'today' ? viewDayLog() : tab === 'stats' ? viewStats() : tab === 'ach' ? viewAch() : viewSettings();
+  paintTimer();
+  syncWake();
+}
+function renderHud() {
+  const { lvl, g } = C, d = C.day(today()), goal = S.settings.dailyGoal;
+  const pct = Math.min(100, d.focusMin / goal * 100);
+  $('hud').innerHTML = `
+    <div class="pill"><div class="lvl">${lvl.L}</div><div><div class="big">${esc(lvl.title)}</div>
+      <div class="xpbar"><i style="width:${lvl.into / lvl.need * 100}%"></i></div>
+      <div class="small faint">${lvl.into} / ${lvl.need} XP · ${g.xp.toLocaleString()} total</div></div></div>
+    <div class="pill" title="Days in a row you hit your daily goal. Each streak day gives +5% XP on focus (max +50%)."><div style="font-size:22px">🔥</div>
+      <div><div class="big">${g.streak} day${g.streak === 1 ? '' : 's'}</div><div class="small faint">streak · +${Math.round((streakMult() - 1) * 100)}% XP</div></div></div>
+    <div class="pill"><svg width="38" height="38" viewBox="0 0 38 38"><circle cx="19" cy="19" r="15" fill="none" stroke="var(--soft)" stroke-width="5"/>
+      <circle cx="19" cy="19" r="15" fill="none" stroke="${pct >= 100 ? 'var(--good)' : 'var(--accent-2)'}" stroke-width="5" stroke-linecap="round"
+       stroke-dasharray="${pct / 100 * 94.25} 94.25" transform="rotate(-90 19 19)"/></svg>
+      <div><div class="big">${fmtMin(d.focusMin)}</div><div class="small faint">of ${fmtMin(goal)} today</div></div></div>`;
+}
+
+function catOptions(sel) { return S.categories.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${esc(c.name)}</option>`).join(''); }
+
+function viewFocus() {
+  const t = S.timer, mode = t ? t.mode : S.current.mode;
+  const c = S.current, d = C.day(today());
+  const btns = !t
+    ? `<button class="btn primary" data-act="start">Start ${MODE_LABEL[mode].toLowerCase()}</button>`
+    : `${t.running ? `<button class="btn primary" data-act="pause">Pause</button>` : `<button class="btn primary" data-act="resume">Resume</button>`}
+       <button class="btn" data-act="finish">${t.mode === 'focus' || t.mode === 'flow' ? 'Finish & log' : 'Skip break'}</button>
+       <button class="btn ghost danger" data-act="discard">Discard</button>`;
+  const filled = nextBreak() === 'long' ? S.settings.longEvery : S.cycle % S.settings.longEvery;
+  const dots = Array.from({ length: S.settings.longEvery }, (_, i) => `<i class="${i < filled ? 'on' : ''}"></i>`).join('');
+  const qs = questsFor(today());
+  return `<div class="grid2">
+    <section class="card timer-card">
+      <div class="modes">${['focus', 'short', 'long', 'flow'].map(m => `<button data-act="mode" data-id="${m}" class="${m === mode ? 'on' : ''}" ${t ? 'disabled' : ''}>${MODE_LABEL[m]}</button>`).join('')}</div>
+      <div class="ring">
+        <svg viewBox="0 0 240 240"><circle cx="120" cy="120" r="108" fill="none" stroke="var(--soft)" stroke-width="12"/>
+          <circle id="ringFg" cx="120" cy="120" r="108" fill="none" stroke="${MODE_COLOR[mode]}" stroke-width="12" stroke-linecap="round" stroke-dasharray="0 678.6"/></svg>
+        <div class="center"><div class="digits" id="digits">--:--</div><div class="small muted" id="ringSub"></div></div>
+      </div>
+      <div class="task-row">
+        <input type="text" id="task" placeholder="What are you working on?" value="${esc(t ? t.title : c.title)}" maxlength="120">
+        <select id="cat">${catOptions(t ? t.cat : c.cat)}</select>
+      </div>
+      <div class="controls">${btns}</div>
+      <div class="cycle small muted" title="Completed focus sessions toward your next long break">${dots}<span style="margin-left:6px">next break: ${nextBreak() === 'long' ? 'long' : 'short'}</span></div>
+      <div class="small faint kbd-hint"><kbd>Space</kbd> start / pause · <kbd>F</kbd> finish</div>
+    </section>
+    <div class="stack">
+      <section class="card setup">
+        <h2>Timer</h2>
+        <div class="row">${S.presets.map(p => `<button class="chip ${p.id === c.presetId ? 'on' : ''}" data-act="preset" data-id="${p.id}" title="${p.focus}/${p.short}/${p.long} min">${esc(p.name)} · ${p.focus}/${p.short}</button>`).join('')}</div>
+        <div class="nums">
+          <label class="f">Focus (min)<input type="number" min="1" max="480" id="n-focus" value="${c.focus}"></label>
+          <label class="f">Short break<input type="number" min="1" max="120" id="n-short" value="${c.short}"></label>
+          <label class="f">Long break<input type="number" min="1" max="180" id="n-long" value="${c.long}"></label>
+        </div>
+        <div class="row" style="margin-top:10px"><button class="btn sm" data-act="savePreset">Save as preset</button>
+          <span class="small faint">Flow mode counts up with no limit — finish whenever.</span></div>
+      </section>
+      <section class="card">
+        <h2>Today's quests <span class="faint small" style="font-weight:400">· new ones every day</span></h2>
+        ${qs.map(q => { const ok = q.ok(d, S.settings.dailyGoal), pr = q.prog ? q.prog(d) : null;
+          return `<div class="quest ${ok ? 'done' : ''}"><div class="box">${ok ? '✓' : ''}</div><div class="txt">${esc(q.label)}${pr && !ok ? ` <span class="faint small">(${Math.min(pr[0], pr[1])}/${pr[1]})</span>` : ''}</div><div class="xp">+${q.xp} XP</div></div>`; }).join('')}
+      </section>
+      <section class="card">
+        <div class="row" style="justify-content:space-between"><h2 style="margin:0">Today so far</h2><button class="btn sm" data-act="tab" data-id="today">Open day log →</button></div>
+        <div style="margin-top:10px">${timeline(today())}</div>
+        ${entryList(d.entries.filter(e => e.type !== 'break').slice(-4).reverse(), true)}
+      </section>
+    </div></div>`;
+}
+function paintTimer() {
+  const dg = $('digits'); if (!dg) { setTitle(); return; }
+  const t = S.timer, mode = t ? t.mode : S.current.mode;
+  const fg = $('ringFg'), sub = $('ringSub'), CIRC = 678.6;
+  let frac, text, subTxt;
+  if (t) {
+    const el = elapsed(t);
+    if (t.duration) { frac = Math.min(1, el / t.duration); text = fmtClock(t.duration - el); }
+    else { frac = (el % (60 * MIN)) / (60 * MIN); text = fmtClock(el); }
+    subTxt = (t.running ? MODE_LABEL[t.mode] : 'Paused') + (t.title && (t.mode === 'focus' || t.mode === 'flow') ? ' · ' + t.title : '');
+  } else {
+    const m = modeMinutes(mode); frac = 0; text = m ? fmtClock(m * MIN) : '00:00';
+    subTxt = mode === 'focus' ? `≈ +${Math.round(m * streakMult()) + 10} XP if completed` : mode === 'flow' ? 'Counts up · +1 XP/min' : 'Rest your eyes';
+  }
+  dg.textContent = text;
+  fg.setAttribute('stroke-dasharray', `${frac * CIRC} ${CIRC}`);
+  fg.style.opacity = frac > 0 ? 1 : 0;
+  sub.textContent = subTxt;
+  setTitle();
+}
+function setTitle() {
+  const t = S.timer;
+  if (!t) { document.title = 'Focus Quest'; return; }
+  const el = elapsed(t);
+  document.title = (t.running ? '▶ ' : '❚❚ ') + fmtClock(t.duration ? t.duration - el : el) + ' · ' + MODE_LABEL[t.mode];
+}
+
+function timeline(k) {
+  const d = C.day(k), es = d.entries;
+  const dayStart = keyDate(k).getTime();
+  let h0 = 7, h1 = 23;
+  for (const e of es) { h0 = Math.min(h0, Math.floor((e.start - dayStart) / 3600000)); h1 = Math.max(h1, Math.ceil((e.end - dayStart) / 3600000)); }
+  h0 = Math.max(0, h0); h1 = Math.min(h1, 24);
+  const span = (h1 - h0) * 3600000, x = t => Math.max(0, Math.min(100, (t - dayStart - h0 * 3600000) / span * 100));
+  const segs = es.map(e => {
+    const cls = e.type === 'break' ? 'brk' : e.type === 'manual' ? 'manual' : '';
+    const col = e.type === 'break' ? '' : `background-color:${catOf(e.cat).color};`;
+    return `<div class="seg ${cls}" data-act="edit" data-id="${e.id}" style="${col}left:${x(e.start)}%;width:${Math.max(0.3, x(e.end) - x(e.start))}%" title="${esc(hm(e.start) + '–' + hm(e.end) + ' · ' + e.title + ' · ' + fmtMin(e.minutes))}"></div>`;
+  }).join('');
+  const now = k === today() ? `<div class="now" style="left:${x(Date.now())}%"></div>` : '';
+  const step = h1 - h0 > 14 ? 3 : 2;
+  let ticks = '';
+  for (let h = Math.ceil(h0 / step) * step; h <= h1; h += step) ticks += `<span style="left:${(h - h0) / (h1 - h0) * 100}%">${pad(h % 24)}</span>`;
+  return `<div class="tl">${segs}${now}</div><div class="tl-ticks">${ticks}</div>`;
+}
+function entryList(list, compact) {
+  if (!list.length) return `<div class="empty">Nothing logged yet${compact ? ' today — start a session.' : ' for this day.'}</div>`;
+  return `<ul class="entries">${list.map(e => {
+    const c = catOf(e.cat), xp = xpOf(e);
+    const tags = e.type === 'manual' ? `<span class="tag">${e.focus ? 'logged focus' : 'activity'}</span>` : e.type === 'break' ? '' :
+      e.completed ? '' : `<span class="tag">${e.mode === 'flow' ? 'flow' : 'ended early'}</span>`;
+    return `<li><span class="sw" style="background:${e.type === 'break' ? 'var(--faint)' : c.color}"></span>
+      <div class="main"><div class="t">${esc(e.title)}${tags}</div>
+        <div class="meta">${hm(e.start)}–${hm(e.end)} · ${fmtMin(e.minutes)}${e.type !== 'break' ? ' · ' + esc(c.name) : ''}</div>
+        ${e.note ? `<div class="note">${esc(e.note)}</div>` : ''}</div>
+      <div class="right">${xp ? `<div class="small" style="color:var(--gold);font-weight:700">+${xp} XP</div>` : ''}
+        <button class="btn sm ghost" data-act="edit" data-id="${e.id}">Edit</button></div></li>`; }).join('')}</ul>`;
+}
+
+function viewDayLog() {
+  const k = viewDay, d = C.day(k), isToday = k === today();
+  const list = [...d.entries].sort((a, b) => b.start - a.start);
+  const byCat = {};
+  for (const e of d.entries) if (e.type !== 'break') byCat[e.cat] = (byCat[e.cat] || 0) + e.minutes;
+  const tracked = Object.values(byCat).reduce((a, b) => a + b, 0);
+  return `<div class="stack">
+    <section class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="row"><button class="btn sm" data-act="day" data-id="-1">←</button>
+          <strong style="min-width:190px;text-align:center">${isToday ? 'Today · ' : ''}${fmtDay(k)}</strong>
+          <button class="btn sm" data-act="day" data-id="1" ${isToday ? 'disabled' : ''}>→</button>
+          ${isToday ? '' : `<button class="btn sm ghost" data-act="day" data-id="0">Today</button>`}</div>
+        <div class="row small muted"><span><b style="color:var(--ink)">${fmtMin(d.focusMin)}</b> focus</span><span><b style="color:var(--ink)">${d.sessions}</b> full sessions</span>
+          <span><b style="color:var(--ink)">${fmtMin(tracked)}</b> tracked</span><span style="color:var(--gold);font-weight:700">+${d.xp} XP</span></div>
+      </div>
+      <div style="margin-top:14px">${timeline(k)}</div>
+      <div class="legend">${Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([id, m]) => `<span style="--c:${catOf(id).color}">${esc(catOf(id).name)} ${fmtMin(m)}</span>`).join('')}
+        <span style="--c:var(--faint)">breaks</span><span class="faint">striped = logged by hand</span></div>
+    </section>
+    <div class="grid2">
+      <section class="card"><h2>What I did</h2>${entryList(list, false)}</section>
+      <section class="card">
+        <h2>Log an activity</h2>
+        <p class="small muted" style="margin-top:-4px">For things you did without the timer — class, gym, a meeting, or focus you forgot to track.</p>
+        <div class="stack">
+          <label class="f">What<input type="text" id="m-title" placeholder="e.g. Digital design lecture" maxlength="120"></label>
+          <div class="row">
+            <label class="f" style="flex:1">Category<select id="m-cat">${catOptions(S.current.cat)}</select></label>
+            <label class="f">From<input type="time" id="m-from"></label>
+            <label class="f">To<input type="time" id="m-to"></label>
+          </div>
+          <label class="check"><input type="checkbox" id="m-focus"> This was focused work (counts toward goal, full XP)</label>
+          <label class="f">Notes (optional)<textarea id="m-note" placeholder="What did you get done?"></textarea></label>
+          <div><button class="btn primary" data-act="logManual">Add to ${isToday ? 'today' : fmtDay(k)}</button></div>
+        </div>
+      </section>
+    </div></div>`;
+}
+
+function viewStats() {
+  const { g, catMin } = C, goal = S.settings.dailyGoal;
+  const last7 = Array.from({ length: 7 }, (_, i) => C.day(addDays(today(), -i)).focusMin).reduce((a, b) => a + b, 0) / 7;
+  // 14-day stacked bars
+  const days = Array.from({ length: 14 }, (_, i) => addDays(today(), i - 13));
+  const perDay = days.map(k => { const o = {}; for (const e of C.day(k).entries) if (isFocus(e)) o[e.cat] = (o[e.cat] || 0) + e.minutes; return o; });
+  const tot = perDay.map(o => Object.values(o).reduce((a, b) => a + b, 0));
+  const max = Math.max(goal * 1.15, ...tot);
+  const bars = perDay.map((o, i) => `<div class="col" title="${fmtDay(days[i])}: ${fmtMin(tot[i])}">${Object.entries(o).map(([cid, m]) =>
+      `<div class="s" style="height:${m / max * 100}%;background:${catOf(cid).color}"></div>`).join('')}</div>`).join('');
+  const cats = [...new Set([...S.categories.map(c => c.id), ...Object.keys(catMin)])].filter(id => catMin[id] || S.categories.some(c => c.id === id));
+  // heatmap: 18 weeks ending this week
+  const end = keyDate(today()); const startD = new Date(end); startD.setDate(startD.getDate() - startD.getDay() - 17 * 7);
+  let heat = '';
+  for (let d = new Date(startD); d <= end; d.setDate(d.getDate() + 1)) {
+    const k = dayKey(d), m = C.day(k).focusMin, r = m / goal;
+    const lvl = m <= 0 ? 0 : r < 0.33 ? 1 : r < 0.66 ? 2 : r < 1 ? 3 : 4;
+    heat += `<i style="background:${HEAT[lvl]}" title="${fmtDay(k)}: ${fmtMin(m)}"></i>`;
+  }
+  return `<div class="stack">
+    <div class="tiles">
+      ${[['Total focus', fmtMin(g.totalMin)], ['Full sessions', g.sessions], ['Current streak', g.streak + ' d'], ['Best streak', g.bestStreak + ' d'], ['7-day average', fmtMin(last7)], ['Quests cleared', g.quests]]
+        .map(([k, v]) => `<div class="card tile"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}
+    </div>
+    <section class="card"><h2>Last 14 days <span class="faint small" style="font-weight:400">· dashed line = daily goal</span></h2>
+      <div class="bars">${bars}<div class="goal" style="bottom:${goal / max * 100}%"></div></div>
+      <div class="bars-x">${days.map(k => `<span>${keyDate(k).getDate()}</span>`).join('')}</div>
+      <div class="legend">${S.categories.map(c => `<span style="--c:${c.color}">${esc(c.name)}</span>`).join('')}</div>
+    </section>
+    <section class="card"><h2>Skills <span class="faint small" style="font-weight:400">· each category levels up on its own</span></h2>
+      ${cats.length ? cats.map(id => { const c = catOf(id), m = catMin[id] || 0, L = skillLevel(m), a = skillAt(L), b = skillAt(L + 1);
+        return `<div class="skill"><div><b>${esc(c.name)}</b> <span class="small muted">Lv ${L}</span></div>
+          <div class="pb"><i style="width:${(m - a) / (b - a) * 100}%;background:${c.color}"></i></div>
+          <div class="small muted" style="text-align:right">${fmtMin(m)}</div></div>`; }).join('') : '<div class="empty">No categories yet.</div>'}
+    </section>
+    <section class="card"><h2>Consistency</h2><div class="heat">${heat}</div>
+      <div class="legend"><span style="--c:${HEAT[0]}">none</span><span style="--c:${HEAT[2]}">part of goal</span><span style="--c:${HEAT[4]}">goal hit</span></div></section>
+  </div>`;
+}
+
+function viewAch() {
+  const { g, unlocked } = C;
+  return `<p class="muted" style="margin-top:0">${unlocked.size} of ${ACH.length} unlocked. Each one adds bonus XP.</p>
+    <div class="ach">${ACH.map(a => { const got = unlocked.has(a.id), [c, t] = a.p(g);
+      return `<div class="card badge ${got ? 'got' : 'locked'}"><div class="ic">${a.ic}</div><div style="flex:1;min-width:0">
+        <div class="nm">${esc(a.nm)} <span class="small" style="color:var(--gold)">+${a.xp}</span></div><div class="small muted">${esc(a.d)}</div>
+        ${got ? '' : `<div class="pb" style="margin-top:6px"><i style="width:${Math.min(100, c / t * 100)}%;background:var(--accent-2)"></i></div>`}</div></div>`; }).join('')}</div>`;
+}
+
+function viewSettings() {
+  const s = S.settings;
+  const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+  return `<div class="stack">
+    <section class="card"><h2>Goals & timer</h2>
+      <div class="set-grid">
+        <label class="f">Daily focus goal (minutes)<input type="number" min="10" max="900" data-set="dailyGoal" value="${s.dailyGoal}"></label>
+        <label class="f">Long break every N sessions<input type="number" min="1" max="12" data-set="longEvery" value="${s.longEvery}"></label>
+        <label class="f">XP rate for non-focus activities<input type="number" min="0" max="1" step="0.1" data-set="manualRate" value="${s.manualRate}"></label>
+      </div>
+      <div class="stack" style="margin-top:14px">
+        <label class="check"><input type="checkbox" data-set="autoBreak" ${s.autoBreak ? 'checked' : ''}> Start the break automatically when a focus session ends</label>
+        <label class="check"><input type="checkbox" data-set="autoFocus" ${s.autoFocus ? 'checked' : ''}> Start the next focus session automatically when a break ends</label>
+        <label class="check"><input type="checkbox" data-set="keepAwake" ${s.keepAwake ? 'checked' : ''}> Keep the screen awake while a timer runs</label>
+        <label class="check"><input type="checkbox" data-set="notify" ${s.notify ? 'checked' : ''}> Notifications (computer)
+          ${perm === 'granted' ? '<span class="tag">allowed</span>' : perm === 'unsupported' ? '' : `<button class="btn sm" data-act="perm">Allow in Firefox</button>`}</label>
+      </div>
+    </section>
+    <section class="card"><h2>Sounds</h2>
+      <label class="check" style="margin-bottom:8px"><input type="checkbox" data-set="sound" ${s.sound ? 'checked' : ''}> Play sounds</label>
+      ${['focus', 'break'].map(slot => { const k = slot === 'focus' ? 'chimeFocus' : 'chimeBreak', cur = s[k], mine = (s.customNames || {})[slot];
+        return `<div class="snd-row"><div class="snd-lbl">${slot === 'focus' ? 'When focus ends' : 'When a break ends'}</div>
+          <select data-set="${k}">${Object.entries(SOUNDS).filter(([id]) => id !== 'level').map(([id, o]) => `<option value="${id}" ${cur === id ? 'selected' : ''}>${o.name}</option>`).join('')}
+            <option value="custom" ${cur === 'custom' ? 'selected' : ''} ${mine ? '' : 'disabled'}>${mine ? 'Mine: ' + esc(mine) : 'Your own (upload first)'}</option></select>
+          <label class="btn sm">Upload…<input type="file" accept="audio/*" data-sound="${slot}" hidden></label>
+          <button class="btn sm" data-act="testSound" data-id="${slot}">▶ Test</button></div>`; }).join('')}
+      <label class="f" style="margin-top:10px">Volume<input type="range" min="0" max="1" step="0.05" data-set="volume" value="${s.volume}"></label>
+      <p class="small muted">Upload any MP3, M4A or WAV (up to 10 MB). On iPhone, sounds play only while the app is open on screen, and the silent switch mutes them.</p>
+    </section>
+    <section class="card"><h2>Categories</h2>
+      ${S.categories.map(c => `<div class="cat-row"><input type="color" data-cat="${c.id}" data-k="color" value="${c.color}">
+        <input type="text" data-cat="${c.id}" data-k="name" value="${esc(c.name)}" maxlength="40">
+        <button class="btn sm ghost danger" data-act="delCat" data-id="${c.id}">Delete</button></div>`).join('')}
+      <button class="btn sm" data-act="addCat" style="margin-top:8px">+ Add category</button>
+    </section>
+    <section class="card"><h2>Presets</h2>
+      ${S.presets.map(p => `<div class="cat-row"><span style="flex:1">${esc(p.name)} <span class="small muted">· ${p.focus} / ${p.short} / ${p.long} min</span></span>
+        <button class="btn sm ghost danger" data-act="delPreset" data-id="${p.id}">Delete</button></div>`).join('')}
+      <p class="small muted">Make new presets from the Timer card on the Focus tab.</p>
+    </section>
+    <section class="card"><h2>Data</h2>
+      <p class="small muted" style="margin-top:-4px">Saved on this device only (inside this browser / the installed app). Clearing website data, or deleting the home-screen app, wipes it — export now and then if you care about the history.</p>
+      <div class="row"><button class="btn sm" data-act="export">Export JSON</button>
+        <label class="btn sm">Import JSON<input type="file" id="importFile" accept=".json,application/json" hidden></label>
+        <button class="btn sm ghost danger" data-act="reset">Reset everything</button></div>
+    </section></div>`;
+}
+
+/* ============================== modals ============================== */
+function openModal(html) { $('modalCard').innerHTML = html; $('modal').classList.add('open'); setTimeout(() => $('modalCard').querySelector('textarea,input')?.focus(), 30); }
+function closeModal() { $('modal').classList.remove('open'); }
+let modalEntry = null;
+function completeModal(e, brk, offerBreak) {
+  modalEntry = e.id;
+  const brkMin = S.current[brk];
+  openModal(`<div style="text-align:center"><div class="small muted">${e.completed ? 'Session complete' : 'Session logged'}</div>
+      <div class="xp-burst">+${xpOf(e)} XP</div>
+      <div class="muted">${esc(e.title)} · ${fmtMin(e.minutes)}${e.mult > 1 ? ` · 🔥 ×${e.mult}` : ''}</div></div>
+    <label class="f" style="margin-top:16px">What did you get done?<textarea id="cm-note" placeholder="A line or two — future you will thank you"></textarea></label>
+    <div class="row" style="margin-top:14px;justify-content:flex-end">
+      ${offerBreak ? `<button class="btn" data-act="cmSave" data-id="skip">Skip break</button><button class="btn primary" data-act="cmSave" data-id="${brk}">Save & take ${brkMin}m break</button>`
+                   : `<button class="btn primary" data-act="cmSave">Save</button>`}
+    </div>`);
+}
+function editModal(id) {
+  const e = S.entries.find(x => x.id === id); if (!e) return;
+  modalEntry = id;
+  const manual = e.type === 'manual';
+  openModal(`<h2>Edit entry</h2><div class="stack">
+    <label class="f">Title<input type="text" id="ed-title" value="${esc(e.title)}" maxlength="120"></label>
+    ${e.type === 'break' ? '' : `<label class="f">Category<select id="ed-cat">${catOptions(e.cat)}</select></label>`}
+    ${manual ? `<div class="row"><label class="f">Date<input type="date" id="ed-date" value="${dayKey(e.start)}"></label>
+      <label class="f">From<input type="time" id="ed-from" value="${hm(e.start)}"></label><label class="f">To<input type="time" id="ed-to" value="${hm(e.end)}"></label></div>
+      <label class="check"><input type="checkbox" id="ed-focus" ${e.focus ? 'checked' : ''}> Focused work</label>`
+      : `<div class="small muted">${fmtDay(dayKey(e.start))} · ${hm(e.start)}–${hm(e.end)} · ${fmtMin(e.minutes)} (timer entries keep their recorded time)</div>`}
+    ${e.type === 'break' ? '' : `<label class="f">Notes<textarea id="ed-note">${esc(e.note || '')}</textarea></label>`}
+    <div class="row" style="justify-content:space-between"><button class="btn ghost danger" data-act="edDel">Delete</button>
+      <div class="row"><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="edSave">Save</button></div></div></div>`);
+}
+function parseSpan(k, from, to) {
+  if (!from || !to) return null;
+  const base = keyDate(k).getTime();
+  const [fh, fm] = from.split(':').map(Number), [th, tm] = to.split(':').map(Number);
+  let s = base + (fh * 60 + fm) * MIN, e = base + (th * 60 + tm) * MIN;
+  if (e <= s) e += 24 * 60 * MIN; // crossed midnight
+  return { s, e, minutes: Math.round((e - s) / MIN) };
+}
+
+/* ============================== events ============================== */
+document.addEventListener('click', ev => {
+  if (ev.target.id === 'modal') return closeModal();
+  const b = ev.target.closest('[data-act]'); if (!b) return;
+  const id = b.dataset.id, act = b.dataset.act;
+  audio(); if (act !== 'testSound') stopSound();
+  const before = snapshot();
+  switch (act) {
+    case 'tab': tab = id; try { localStorage.setItem('fq-tab', id); } catch (_) {} if (id === 'today') viewDay = today(); render(); scrollTo(0, 0); break;
+    case 'mode': S.current.mode = id; save(); render(); break;
+    case 'start': startTimer(S.current.mode); break;
+    case 'pause': pauseTimer(); break;
+    case 'resume': resumeTimer(); break;
+    case 'finish': finishTimer(false); break;
+    case 'discard': discardTimer(); break;
+    case 'preset': { const p = S.presets.find(x => x.id === id); Object.assign(S.current, { presetId: p.id, focus: p.focus, short: p.short, long: p.long }); save(); render(); break; }
+    case 'savePreset': {
+      const name = prompt('Name this preset:', `${S.current.focus}/${S.current.short}`); if (!name) break;
+      const p = { id: uid(), name: name.slice(0, 30), focus: +S.current.focus, short: +S.current.short, long: +S.current.long };
+      S.presets.push(p); S.current.presetId = p.id; save(); render(); toast('Preset saved'); break;
+    }
+    case 'day': viewDay = id === '0' ? today() : addDays(viewDay, +id); if (viewDay > today()) viewDay = today(); render(); break;
+    case 'logManual': {
+      const title = $('m-title').value.trim(), span = parseSpan(viewDay, $('m-from').value, $('m-to').value);
+      if (!title) { toast('Give it a name'); break; }
+      if (!span || span.minutes < 1) { toast('Pick a start and end time'); break; }
+      S.entries.push({ id: uid(), type: 'manual', title, cat: $('m-cat').value, start: span.s, end: span.e, minutes: span.minutes, focus: $('m-focus').checked, note: $('m-note').value.trim() });
+      save(); celebrate(before); render(); toast(`Logged ${fmtMin(span.minutes)}`); break;
+    }
+    case 'edit': editModal(id); break;
+    case 'close': closeModal(); break;
+    case 'testSound': stopSound(); playSlot(id); break;
+    case 'cmSave': {
+      const e = S.entries.find(x => x.id === modalEntry);
+      if (e) e.note = $('cm-note').value.trim();
+      closeModal();
+      if (id && id !== 'skip') startTimer(id); else { save(); celebrate(before); render(); }
+      break;
+    }
+    case 'edSave': {
+      const e = S.entries.find(x => x.id === modalEntry); if (!e) break;
+      e.title = $('ed-title').value.trim() || e.title;
+      if ($('ed-cat')) e.cat = $('ed-cat').value;
+      if ($('ed-note')) e.note = $('ed-note').value.trim();
+      if (e.type === 'manual') {
+        const span = parseSpan($('ed-date').value, $('ed-from').value, $('ed-to').value);
+        if (span) Object.assign(e, { start: span.s, end: span.e, minutes: span.minutes });
+        e.focus = $('ed-focus').checked;
+      }
+      closeModal(); save(); celebrate(before); render(); break;
+    }
+    case 'edDel': if (confirm('Delete this entry? Its XP goes with it.')) { S.entries = S.entries.filter(x => x.id !== modalEntry); closeModal(); save(); render(); } break;
+    case 'perm': Notification.requestPermission().then(render); break;
+    case 'addCat': S.categories.push({ id: uid(), name: 'New category', color: PALETTE[S.categories.length % PALETTE.length] }); save(); render(); break;
+    case 'delCat': {
+      const used = S.entries.filter(e => e.cat === id).length;
+      if (S.categories.length <= 1) { toast('Keep at least one category'); break; }
+      if (!confirm(used ? `${used} entries use this category; they'll show as "Uncategorised". Delete?` : 'Delete this category?')) break;
+      S.categories = S.categories.filter(c => c.id !== id);
+      if (S.current.cat === id) S.current.cat = S.categories[0].id;
+      save(); render(); break;
+    }
+    case 'delPreset': if (S.presets.length > 1) { S.presets = S.presets.filter(p => p.id !== id); save(); render(); } else toast('Keep at least one preset'); break;
+    case 'export': {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }));
+      a.download = `focus-quest-${today()}.json`; a.click(); break;
+    }
+    case 'reset': if (confirm('Erase ALL entries, XP and settings?') && confirm('Really?')) { S = defaults(); save(); render(); } break;
+  }
+});
+document.addEventListener('input', ev => {
+  const el = ev.target;
+  if (el.id === 'task') { S.current.title = el.value; if (S.timer) S.timer.title = el.value.trim(); save(); }
+  else if (el.id.startsWith('n-')) {
+    const k = el.id.slice(2), v = Math.round(+el.value);
+    if (v >= 1 && v <= 600) { S.current[k] = v; S.current.presetId = null; save(); paintTimer();
+      document.querySelectorAll('.chip.on').forEach(c => c.classList.remove('on')); }
+  }
+  else if (el.dataset.cat) { const c = S.categories.find(x => x.id === el.dataset.cat); if (c) { c[el.dataset.k] = el.value; save(); } }
+});
+document.addEventListener('change', ev => {
+  const el = ev.target;
+  if (el.id === 'cat') { S.current.cat = el.value; if (S.timer) S.timer.cat = el.value; save(); }
+  else if (el.dataset.set) {
+    const k = el.dataset.set;
+    S.settings[k] = el.type === 'checkbox' ? el.checked : el.tagName === 'SELECT' ? el.value : Math.max(+el.min || 0, Math.min(+el.max || 1e9, +el.value));
+    if (el.tagName === 'SELECT') { save(); stopSound(); playSlot(k === 'chimeFocus' ? 'focus' : 'break'); }
+    if (k === 'notify' && el.checked && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission().then(render);
+    save(); render();
+  }
+  else if (el.dataset.cat) render();
+  else if (el.dataset.sound && el.files[0]) { uploadSound(el.dataset.sound, el.files[0]).catch(err => toast('Sound not set: ' + err.message)); }
+  else if (el.id === 'importFile' && el.files[0]) {
+    el.files[0].text().then(txt => {
+      const obj = JSON.parse(txt);
+      if (!obj || !Array.isArray(obj.entries)) throw new Error('not a Focus Quest export');
+      if (!confirm(`Replace current data with this file (${obj.entries.length} entries)?`)) return;
+      S = migrate(obj); save(); render(); toast('Imported');
+    }).catch(err => toast('Import failed: ' + err.message));
+  }
+});
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape') return closeModal();
+  if ($('modal').classList.contains('open') || ev.target.matches('input,textarea,select') || ev.metaKey || ev.ctrlKey) return;
+  if (tab !== 'focus') return;
+  if (ev.code === 'Space') { ev.preventDefault(); !S.timer ? startTimer(S.current.mode) : S.timer.running ? pauseTimer() : resumeTimer(); }
+  else if (ev.key === 'f' && S.timer) finishTimer(false);
+});
+
+/* ============================== boot ============================== */
+(() => {
+  load();
+  const h = location.hash.slice(1); if (TABS.some(t => t[0] === h)) tab = h;
+  if (!S.categories.some(c => c.id === S.current.cat)) S.current.cat = S.categories[0].id;
+  recompute();
+  // timer ran out while the app was closed → log it now
+  if (S.timer && S.timer.running && S.timer.duration && elapsed(S.timer) >= S.timer.duration) finishTimer(true);
+  render();
+  setInterval(tick, 250);
+  loadCustom('focus'); loadCustom('break');
+  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  setInterval(() => { if (!S.timer && tab !== 'settings' && !$('modal').classList.contains('open') && !document.activeElement.matches('input,textarea,select')) render(); }, 60000);
+})();
+</script>
+</body>
+</html>
